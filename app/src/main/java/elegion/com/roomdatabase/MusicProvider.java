@@ -122,9 +122,9 @@ public class MusicProvider extends ContentProvider {
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
 
-        if(isValuesValid(values)) {
-            switch (URI_MATCHER.match(uri)) {
-                case ALBUM_TABLE_CODE:
+        switch (URI_MATCHER.match(uri)) {
+            case ALBUM_TABLE_CODE:
+                if (isInsertAlbumValuesValid(values)) {
                     Album album = new Album();
                     Integer idAlbum = values.getAsInteger("id");
                     album.setId(idAlbum);
@@ -132,8 +132,10 @@ public class MusicProvider extends ContentProvider {
                     album.setReleaseDate(values.getAsString("release"));
                     mMusicDao.insertAlbum(album);
                     return ContentUris.withAppendedId(uri, idAlbum);
+                } else throw new IllegalArgumentException("cant insert albums");
 
-                case SONG_TABLE_CODE:
+            case SONG_TABLE_CODE:
+                if (isInsertSongValuesValid(values)) {
                     Song song = new Song();
                     Integer idSong = values.getAsInteger("id");
                     song.setId(idSong);
@@ -141,61 +143,63 @@ public class MusicProvider extends ContentProvider {
                     song.setDuration(values.getAsString("duration"));
                     mMusicDao.insertSong(song);
                     return ContentUris.withAppendedId(uri, idSong);
+                } else throw new IllegalArgumentException("cant insert songs");
 
-                case ALBUM_SONG_TABLE_CODE:
+            case ALBUM_SONG_TABLE_CODE:
+                if (isInsertAlbumSongValuesValid(values)) {
                     AlbumSong albumSong = new AlbumSong();
-                    Integer idAlbumSong = values.getAsInteger("id");
-                    albumSong.setId(idAlbumSong);
-                    albumSong.setAlbumId(values.getAsInteger("albumId"));
-                    albumSong.setSongId(values.getAsInteger("songId"));
-                    mMusicDao.setLinkAlbumSongs(albumSong);
+                    //Integer idAlbumSong = values.getAsInteger("id");
+                    //albumSong.setId(idAlbumSong);
+                    albumSong.setAlbumId(values.getAsInteger("album_id"));
+                    albumSong.setSongId(values.getAsInteger("song_id"));
+                    long idAlbumSong = mMusicDao.setLinkAlbumSongs(albumSong);
                     return ContentUris.withAppendedId(uri, idAlbumSong);
+                } else throw new IllegalArgumentException("cant insert albumsongs");
 
-                default:
-                    throw new IllegalArgumentException("cant add multiple items");
-            }
-        } else {
-            throw new IllegalArgumentException("cant add multiple items");
+            default:
+                throw new IllegalArgumentException("cant update items");
         }
     }
 
     @Override
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        if(isValuesValid(values)) {
-
-            switch (URI_MATCHER.match(uri)) {
-                case ALBUM_ROW_CODE:
+        switch (URI_MATCHER.match(uri)) {
+            case ALBUM_ROW_CODE:
+                if(isUpdateAlbumValuesValid(values)) {
                     Album album = new Album();
                     int idAlbum = (int) ContentUris.parseId(uri);
                     album.setId(idAlbum);
                     album.setName(values.getAsString("name"));
                     album.setReleaseDate(values.getAsString("release"));
                     return mMusicDao.updateAlbumInfo(album);
+                } else throw new IllegalArgumentException("cant update albums");
 
-                case SONG_ROW_CODE:
+            case SONG_ROW_CODE:
+                if(isUpdateSongValuesValid(values)) {
                     Song song = new Song();
                     int id = (int) ContentUris.parseId(uri);
                     song.setId(id);
                     song.setName(values.getAsString("name"));
                     song.setDuration(values.getAsString("duration"));
                     return mMusicDao.updateSongInfo(song);
+                } else throw new IllegalArgumentException("cant update songs");
 
-                case ALBUM_SONG_ROW_CODE:
+            case ALBUM_SONG_ROW_CODE:
+                if(isUpdateAlbumSongValuesValid(values)) {
                     AlbumSong albumSong = new AlbumSong();
                     int idAlbumSong = (int) ContentUris.parseId(uri);
                     albumSong.setId(idAlbumSong);
-                    albumSong.setAlbumId(values.getAsInteger("albumId"));
-                    albumSong.setSongId(values.getAsInteger("songId"));
+                    albumSong.setAlbumId(values.getAsInteger("album_id"));
+                    albumSong.setSongId(values.getAsInteger("song_id"));
                     return mMusicDao.updateAlbumSongInfo(albumSong);
+                } else throw new IllegalArgumentException("cant update albumSongs");
 
-                default:
-                    throw new IllegalArgumentException("cant add multiple items");
-            }
-
-        } else {
-            throw new IllegalArgumentException("cant add multiple items");
+            default:
+                throw new IllegalArgumentException("cant update items");
         }
+
+
     }
 
     @Override
@@ -219,7 +223,23 @@ public class MusicProvider extends ContentProvider {
         }
     }
 
-    private boolean isValuesValid(ContentValues values) {
+    private boolean isInsertAlbumValuesValid(ContentValues values) {
         return values.containsKey("id") && values.containsKey("name") && values.containsKey("release");
     }
+    private boolean isInsertSongValuesValid(ContentValues values) {
+        return values.containsKey("id") && values.containsKey("name") && values.containsKey("duration");
+    }
+    private boolean isInsertAlbumSongValuesValid(ContentValues values) {
+        return values.containsKey("id") && values.containsKey("album_id") && values.containsKey("song_id");
+    }
+    private boolean isUpdateAlbumValuesValid(ContentValues values) {
+        return values.containsKey("name") && values.containsKey("release");
+    }
+    private boolean isUpdateSongValuesValid(ContentValues values) {
+        return values.containsKey("name") && values.containsKey("duration");
+    }
+    private boolean isUpdateAlbumSongValuesValid(ContentValues values) {
+        return values.containsKey("album_id") && values.containsKey("song_id");
+    }
+
 }

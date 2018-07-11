@@ -27,13 +27,13 @@ public interface MusicDao {
     void insertSongs(List<Song> songs);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertSong(Song song);
+    void insertSong(Song songs);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void setLinksAlbumSongs(List<AlbumSong> linksAlbumSongs);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void setLinkAlbumSongs(AlbumSong linkAlbumSongs);
+    long setLinkAlbumSongs(AlbumSong linkAlbumSongs);
 
 
     @Query("select * from album")
